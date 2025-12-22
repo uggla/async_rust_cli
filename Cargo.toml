@@ -3,6 +3,9 @@ name = "async_rust_cli"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = ["sncf"]
+
 [dependencies]
 anyhow = "1.0.100"
 dotenvy = "0.15.7"
