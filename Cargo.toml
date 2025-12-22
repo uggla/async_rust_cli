@@ -9,13 +9,14 @@ members = ["sncf"]
 [dependencies]
 anyhow = "1.0.100"
 dotenvy = "0.15.7"
-sncf = { path = "sncf" }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = [
   "registry",
   "env-filter",
 ] }
 tracing-appender = "0.2.4"
+
+# TODO: Fix the missing dependencies
 
 
 [dev-dependencies]

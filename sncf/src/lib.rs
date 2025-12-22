@@ -6,9 +6,9 @@ pub enum SncfAPIError {
     ApiError(String),
 }
 
+// TODO: Fix the following enum
 pub enum Call {
     Ok,
-    Ko,
 }
 
 /// Calls the SNCF API simulation.
@@ -22,17 +22,14 @@ pub enum Call {
 /// assert!(call_me(Call::Ko).is_err());
 /// ```
 pub fn call_me(arg: Call) -> Result<(), SncfAPIError> {
-    match arg {
-        Call::Ok => Ok(()),
-        Call::Ko => Err(SncfAPIError::ApiError("This call fails".to_string())),
-    }
+    // TODO: Complete this function
+    todo!()
 }
 
-pub fn call_me_twice(arg: &Call) -> Result<(), SncfAPIError> {
-    match arg {
-        Call::Ok => Ok(()),
-        Call::Ko => Err(SncfAPIError::ApiError("This call fails".to_string())),
-    }
+// TODO: Change the signature to not move and borrow arg.
+pub fn call_me_twice(arg: Call) -> Result<(), SncfAPIError> {
+    // TODO: Copy the body from the call_me function
+    todo!()
 }
 
 #[cfg(test)]
