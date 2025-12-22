@@ -24,7 +24,6 @@ dependencies = [
  "anyhow",
  "dotenvy",
  "pretty_assertions",
- "sncf",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
