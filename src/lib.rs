@@ -14,3 +14,40 @@ pub fn api_check(api: String) -> anyhow::Result<()> {
         _ => bail!("Wrong api key"),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn fake() {
+        assert_eq!(1, 1);
+    }
+
+    #[test]
+    #[should_panic(expected = "Houston, we have a problem !")]
+    fn fake_panic() {
+        panic!("Houston, we have a problem !");
+    }
+
+    #[test]
+    fn run_calls_sncf_ok() {
+        let result = run();
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn api_check_accepts_expected_key() {
+        let result = api_check("change_me".to_string());
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn api_check_rejects_other_keys() {
+        let result = api_check("nope".to_string());
+
+        let err = result.expect_err("expected api_check to fail for invalid key");
+        assert_eq!(err.to_string(), "Wrong api key");
+    }
+}
