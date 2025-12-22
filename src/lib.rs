@@ -1,4 +1,5 @@
 use anyhow::bail;
+// TODO: Fix the following import
 use sncf::{Call, call_me, call_me_twice};
 
 pub const APPNAME: &str = env!("CARGO_PKG_NAME");
@@ -9,12 +10,14 @@ pub fn run() -> anyhow::Result<()> {
     call_me(arg1)?;
 
     let arg2 = Call::Ko;
-    let _ = call_me_twice(&arg2);
-    let _ = call_me_twice(&arg2);
+    // TODO: Fix to call the call_me_function (do not move arg2)
+    let _ = call_me_twice(arg2);
+    let _ = call_me_twice(arg2);
     Ok(())
 }
 
-pub fn api_check(api: String) -> anyhow::Result<()> {
+// TODO: Fix the visibility of the function
+fn api_check(api: String) -> anyhow::Result<()> {
     match api.as_str() {
         "change_me" => Ok(()),
         _ => bail!("Wrong api key"),
