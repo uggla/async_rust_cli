@@ -1,10 +1,14 @@
 use anyhow::bail;
-use sncf::{Call, call_me};
+use sncf::{Call, call_me, call_me_twice};
 
 pub fn run() -> anyhow::Result<()> {
     let arg1 = Call::Ok;
 
     call_me(arg1)?;
+
+    let arg2 = Call::Ko;
+    let _ = call_me_twice(&arg2);
+    let _ = call_me_twice(&arg2);
     Ok(())
 }
 

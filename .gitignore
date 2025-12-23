@@ -5,3 +5,4 @@ target
 /slides/async_rust_cli.html
 /slides/async_rust_cli.png
 nohup.out
+logs

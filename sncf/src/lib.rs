@@ -21,8 +21,15 @@ pub enum Call {
 /// assert!(call_me(Call::Ok).is_ok());
 /// assert!(call_me(Call::Ko).is_err());
 /// ```
-pub fn call_me(arg1: Call) -> Result<(), SncfAPIError> {
-    match arg1 {
+pub fn call_me(arg: Call) -> Result<(), SncfAPIError> {
+    match arg {
+        Call::Ok => Ok(()),
+        Call::Ko => Err(SncfAPIError::ApiError("This call fails".to_string())),
+    }
+}
+
+pub fn call_me_twice(arg: &Call) -> Result<(), SncfAPIError> {
+    match arg {
         Call::Ok => Ok(()),
         Call::Ko => Err(SncfAPIError::ApiError("This call fails".to_string())),
     }
