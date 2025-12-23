@@ -1,2 +1,3 @@
-/target
+.env
+target
 /slides/async_rust_tui.html
