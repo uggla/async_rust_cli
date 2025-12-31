@@ -4,11 +4,12 @@ use tokio::sync::mpsc::{self, error};
 
 pub const APPNAME: &str = env!("CARGO_PKG_NAME");
 
+// ***DO*** fix me --v
 #[allow(unused)]
-pub async fn run(_api_key: String) -> anyhow::Result<()> {
+pub fn run(_api_key: String) -> anyhow::Result<()> {
     let mut count = 0;
     let mut msg = String::new();
-    let (data_sender, mut data_receiver) = mpsc::channel::<String>(5);
+    let (data_sender, data_receiver) = mpsc::channel::<String>(5);
 
     // Spawn a task here that will send data from the API.
     let refresh_task = tokio::spawn(async move {
@@ -21,10 +22,9 @@ pub async fn run(_api_key: String) -> anyhow::Result<()> {
             } else {
                 msg = format!("Hello {count}");
             }
-            if let Err(e) = data_sender.send(msg).await {
-                tracing::error!("Error sending message: {e}");
-                break;
-            }
+
+            // ***DO*** Send a message here using mpsc
+
             tokio::time::sleep(tokio::time::Duration::from_millis(2000)).await;
             count += 1;
         }
