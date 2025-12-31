@@ -655,9 +655,240 @@
           </div>
         </section>
 
+        <!-- ======================= -->
+        <!-- BLOC 2 : Async and mpsc -->
+        <!-- ======================= -->
         <section>
-          <h3>Systems and Scheduling in Bevy</h3>
-          <img src="images/pacman.webp" alt="system_scheduling" width="75%" />
+          <h3>Part 2 - Async and mpsc</h3>
+          <img src="images/part02.jpg" alt="async and mpsc" width="40%" />
+        </section>
+
+        <section>
+          <h3>Part 2 — Goals</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                We move to <strong>async</strong> early on:
+                <ul>
+                  <li>to avoid blocking the future TUI loop,</li>
+                  <li>
+                    to later perform
+                    <strong>real API requests asynchronously</strong>,
+                  </li>
+                  <li>without changing the overall architecture.</li>
+                </ul>
+              </li>
+              <li>
+                For now, the <strong>TUI loop is simulated</strong> inside the
+                <code>run()</code> function.
+                <ul>
+                  <li>
+                    It represents the future event loop: rendering, input
+                    handling, and state updates.
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                A <strong>background task</strong> simulates periodic data
+                updates:
+                <ul>
+                  <li>it acts like the SNCF API refresh,</li>
+                  <li>sends new data at regular intervals,</li>
+                  <li>communicates with the TUI loop via a channel.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 2 — Async</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                <strong>You need an executor</strong> to run async code
+                <ul>
+                  <li>
+                    <code>async fn</code> returns a <strong>Future</strong> (it
+                    does not run by itself)
+                  </li>
+                  <li>
+                    An executor is responsible for
+                    <strong>polling</strong> futures and making progress
+                  </li>
+                  <li>
+                    <strong>Tokio</strong> is the most common one, but it is
+                    <strong>not the only executor</strong> (for example
+                    <strong>Embassy</strong> for embedded systems)
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Tokio API looks similar to std threads</strong>
+                <ul>
+                  <li>
+                    <code>tokio::spawn(...)</code> vs
+                    <code>std::thread::spawn(...)</code>
+                  </li>
+                  <li>
+                    <code>tokio::time::sleep(...)</code> vs
+                    <code>std::thread::sleep(...)</code>
+                  </li>
+                  <li>
+                    <strong>⚠️ Warning:</strong> make sure you import the right
+                    items (<code>tokio::time</code>, <code>tokio::sync</code>,
+                    etc.)
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Async is “colored”</strong>
+                <ul>
+                  <li>
+                    functions must be declared <code>async fn</code> to use
+                    <code>.await</code>
+                  </li>
+                  <li>
+                    <code>.await</code> can only be used inside an
+                    <code>async</code> function
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Futures are lazy</strong>
+                <ul>
+                  <li>
+                    they do nothing until they are <strong>awaited</strong> (or
+                    polled by the executor)
+                  </li>
+                  <li>
+                    a spawned task is a <strong>Future</strong> that the runtime
+                    will poll
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 2 — Async (cont.)</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                <strong>Task ≠ thread</strong>
+                <ul>
+                  <li>
+                    a Tokio <strong>task</strong> is a lightweight unit of work
+                    managed by the runtime
+                  </li>
+                  <li>
+                    whether it runs on 1 OS thread or many depends on the
+                    <strong>executor configuration</strong>
+                    (current-thread vs multi-thread runtime)
+                  </li>
+                  <li>
+                    tasks can be moved between worker threads by the runtime
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Cooperative concurrency</strong>
+                <ul>
+                  <li>
+                    tasks must <strong>yield</strong> regularly (typically at
+                    <code>.await</code> points)
+                  </li>
+                  <li>
+                    the runtime makes progress by polling tasks that are ready
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>⚠️ Big warning: never block the runtime</strong>
+                <ul>
+                  <li>
+                    blocking a task can freeze <strong>all</strong> tasks on
+                    that worker thread (including the TUI loop!)
+                  </li>
+                  <li>
+                    avoid blocking calls inside async code:
+                    <code>std::thread::sleep</code>, heavy CPU loops, blocking
+                    I/O, etc.
+                  </li>
+                  <li>
+                    if you must run blocking or CPU-bound work:
+                    <ul>
+                      <li>use <code>tokio::task::spawn_blocking</code></li>
+                      <li>
+                        it runs on a
+                        <strong>dedicated blocking thread pool</strong>
+                        and does not block the async runtime
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 2 - Tokio mpsc</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                <strong>mpsc (multi-producer, single-consumer)</strong>
+                <ul>
+                  <li>
+                    tasks communicate by <strong>sending messages</strong>,
+                  </li>
+                  <li>clear data flow: producer → consumer,</li>
+                  <li>no shared mutable state.</li>
+                </ul>
+              </li>
+
+              <li>
+                In our case:
+                <ul>
+                  <li>the <strong>refresh task</strong> sends updates,</li>
+                  <li>
+                    the <strong>TUI loop</strong> receives and processes them.
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Alternative: shared memory</strong>
+                <ul>
+                  <li>
+                    <code>Arc&lt;Mutex&lt;T&gt;&gt;</code> or
+                    <code>Arc&lt;RwLock&lt;T&gt;&gt;</code>
+                  </li>
+                  <li>
+                    useful when multiple tasks need direct access to the same
+                    state
+                  </li>
+                  <li>requires careful locking and can introduce contention</li>
+                </ul>
+              </li>
+
+              <li>
+                For this workshop, we prefer <strong>channels</strong>:
+                <ul>
+                  <li>simpler mental model,</li>
+                  <li>explicit data flow,</li>
+                  <li>well-suited for a TUI event loop.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
         </section>
 
         <section>
