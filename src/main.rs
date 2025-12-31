@@ -3,6 +3,7 @@ use std::env;
 use async_rust_cli::{APPNAME, api_check, run};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
+// v-- I'm now async
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Setup logging
@@ -25,7 +26,8 @@ async fn main() -> anyhow::Result<()> {
     let _ = dotenvy::dotenv();
     let api_key = env::var("SNCF_API_KEY")?;
     api_check(api_key.clone())?;
-    run(api_key).await?;
+    // TODO: fix this function calling syntax
+    run(api_key)?;
 
     tracing::info!("Application ending");
     Ok(())
