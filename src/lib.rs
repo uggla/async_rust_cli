@@ -86,6 +86,9 @@ fn refresh_task_result_to_err(res: Result<(), tokio::task::JoinError>) -> anyhow
 
 #[cfg(test)]
 mod tests {
+    use sncf::client::ReqwestClient;
+    use sncf::{SncfAPIError, fetch_journeys, fetch_places};
+
     use super::*;
 
     #[test]
@@ -139,5 +142,82 @@ mod tests {
     async fn run_returns_ok_after_stop_message() {
         let result = run("change_me".to_string()).await;
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    #[ignore = "hits live SNCF API"]
+    // Take care you need to export the SNCF_API_KEY
+    async fn test_fetch_places_live_api() {
+        let api_key =
+            std::env::var("SNCF_API_KEY").expect("set SNCF_API_KEY to run the live API test");
+        let client = ReqwestClient::new();
+
+        let results = fetch_places(&client, &api_key, "Grenoble")
+            .await
+            .expect("expected live SNCF API to return places");
+
+        dbg!(&results);
+
+        assert!(
+            !results.is_empty(),
+            "expected at least one stop_area place from live API"
+        );
+        assert!(
+            results.iter().any(|place| {
+                place.id == "stop_area:SNCF:87747006" && place.name == "Grenoble (Grenoble)"
+            }),
+            "expected Grenoble (Grenoble) stop_area in live API results"
+        );
+    }
+
+    #[tokio::test]
+    #[ignore = "hits live SNCF API"]
+    // Take care you need to export the SNCF_API_KEY
+    async fn test_fetch_journeys_live_api() {
+        let api_key =
+            std::env::var("SNCF_API_KEY").expect("set SNCF_API_KEY to run the live API test");
+        let client = ReqwestClient::new();
+
+        // fetch_journeys should return 25 items.
+        let results = fetch_journeys(
+            &client,
+            &api_key,
+            "stop_area:SNCF:87747006",
+            "stop_area:SNCF:87747337",
+        )
+        .await
+        .expect("expected live SNCF API to return journeys");
+
+        dbg!(&results);
+
+        assert!(
+            !results.is_empty(),
+            "expected at least one journey from live API"
+        );
+
+        assert_eq!(25, results.len());
+    }
+
+    #[tokio::test]
+    #[ignore = "hits live SNCF API"]
+    async fn fetch_places_live_api_invalid_api_key() {
+        let client = ReqwestClient::new();
+        let err = fetch_places(&client, "invalid_api_key", "Grenoble")
+            .await
+            .expect_err("expected invalid api key to return an error");
+
+        match err {
+            SncfAPIError::ApiError { status, message } => {
+                assert!(
+                    status == 401 || status == 403,
+                    "unexpected status for invalid api key: {status}"
+                );
+                assert!(
+                    message.contains("Token absent"),
+                    "unexpected api error message: {message}"
+                );
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
     }
 }
