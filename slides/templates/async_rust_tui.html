@@ -1058,6 +1058,51 @@
         </section>
 
         <section>
+          <h3>Part 3 — What changed (and how to test)</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                Most of the changes are located in the
+                <strong><code>sncf</code> crate</strong>.
+                <ul>
+                  <li>API wrapping,</li>
+                  <li>dependency inversion,</li>
+                  <li>time handling and domain mapping.</li>
+                </ul>
+              </li>
+
+              <li>
+                Some tests are marked as <strong>ignored</strong>:
+                <ul>
+                  <li>they hit the <strong>live SNCF API</strong>,</li>
+                  <li>they require network access and a valid API key.</li>
+                </ul>
+              </li>
+
+              <li>
+                To run them:
+                <ul>
+                  <li>remove the <code>#[ignore]</code> attribute</li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Note</strong>:
+                <ul>
+                  <li>
+                    the <code>todo!()</code> macro can be used to
+                    <strong>temporarily relax the compiler</strong>
+                  </li>
+                  <li>
+                    it allows the code to compile while a part is still missing,
+                    until it is properly implemented.
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section>
           <h3>Introduction to Bevy Scheduler</h3>
           <div class="lots_of_items">
             <ul>
