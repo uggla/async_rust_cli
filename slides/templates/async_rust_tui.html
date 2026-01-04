@@ -891,6 +891,172 @@
           </div>
         </section>
 
+        <!-- =============================================== -->
+        <!-- BLOC 3 :  Api wrapping and dependency inversion -->
+        <!-- =============================================== -->
+        <section>
+          <h3>Part 3 - Api wrapping and dependency inversion</h3>
+          <img
+            src="images/part03.jpg"
+            alt="Api wrapping and dependency inversion"
+            width="80%"
+          />
+        </section>
+
+        <section>
+          <h3>Part 3 — API wrapping</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                <strong>Goal</strong>: wrap the SNCF API behind a clean and
+                minimal interface.
+              </li>
+
+              <li>
+                We expose only what the application really needs:
+                <ul>
+                  <li>
+                    <code>fetch_places()</code> — retrieve and filter places
+                    (stop areas),
+                  </li>
+                  <li>
+                    <code>fetch_journeys()</code> — retrieve journeys between
+                    two places.
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                The rest of the application:
+                <ul>
+                  <li>does not know about HTTP,</li>
+                  <li>does not know about JSON payloads,</li>
+                  <li>only works with domain types.</li>
+                </ul>
+              </li>
+
+              <li>
+                This gives us a <strong>clear boundary</strong> between the
+                external API and our core logic.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 3 - Dependency inversion</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                Directly calling the HTTP client makes code:
+                <ul>
+                  <li>hard to test,</li>
+                  <li>tightly coupled to the network,</li>
+                  <li>dependent on external services.</li>
+                </ul>
+              </li>
+
+              <li>
+                Instead, we invert the dependency:
+                <ul>
+                  <li>define an <strong>HTTPClient trait</strong>,</li>
+                  <li>
+                    provide a real implementation (<code>ReqwestClient</code>),
+                  </li>
+                  <li>
+                    provide a fake one (<code>FakeClient</code>) for tests.
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                Benefits:
+                <ul>
+                  <li>test logic in <strong>isolation</strong>,</li>
+                  <li>no network access during tests,</li>
+                  <li>deterministic and fast test suite.</li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Key principle</strong>:
+                <ul>
+                  <li>
+                    The API layer depends on <strong>abstractions</strong>, not
+                    on concrete implementations.
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Example</strong>:
+                <ul>
+                  <li>
+                    if the SNCF API is no longer HTTP-based (for example
+                    <strong>gRPC</strong>),
+                    <br />
+                    <em>
+                      (note: the trait name <code>HTTPClient</code> would no
+                      longer be well suited in that case)
+                    </em>
+                  </li>
+                  <li>
+                    we only need a <strong>new client implementation</strong>,
+                  </li>
+                  <li>the rest of the application remains unchanged.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 3 - Time handling with jiff</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                Dealing with time is hard:
+                <ul>
+                  <li>time zones,</li>
+                  <li>durations,</li>
+                  <li>formatting for display.</li>
+                </ul>
+              </li>
+
+              <li>
+                We use <strong>jiff</strong> to build a solid time model:
+                <ul>
+                  <li>parse zoned datetimes from the API,</li>
+                  <li>compute journey durations safely,</li>
+                  <li>store time-related data in explicit structures.</li>
+                </ul>
+              </li>
+
+              <li>
+                Alternatives in the Rust ecosystem:
+                <ul>
+                  <li>
+                    <strong>chrono</strong> — widely used, feature-rich, mature
+                  </li>
+                  <li>
+                    <strong>time</strong> — lower-level, explicit, std-like
+                    design
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                Choice here:
+                <ul>
+                  <li>explicit time zones and strong types,</li>
+                  <li>clear semantics for dates and durations,</li>
+                  <li>a solid foundation for domain logic and UI.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         <section>
           <h3>Introduction to Bevy Scheduler</h3>
           <div class="lots_of_items">
