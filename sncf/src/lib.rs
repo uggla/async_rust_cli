@@ -122,30 +122,21 @@ pub async fn fetch_journeys(
     to_id: &str,
 ) -> Result<Vec<Journey>, SncfAPIError> {
     let url = build_journeys_url(from_id, to_id);
-    let parsed: JourneysResponse = client.get(&url, api_key, Some("")).await?;
-    parsed
-        .journeys
-        .into_iter()
-        .map(|j| {
-            let dep = parse_sncf_dt(&j.departure_date_time)?;
-            let arr = parse_sncf_dt(&j.arrival_date_time)?;
-            let date_str = format_date(&dep);
-            let dur = &arr - &dep;
-            let duration_secs = dur.total(Unit::Second).map_err(|_| {
-                SncfAPIError::InvalidDuration(format!(
-                    "Invalid duration from {} to {}",
-                    j.departure_date_time, j.arrival_date_time
-                ))
-            })?;
-            Ok(Journey {
-                dep,
-                arr,
-                date_str,
-                duration_secs: duration_secs as i64,
-                nb_transfers: j.nb_transfers.unwrap_or(0),
-            })
-        })
-        .collect()
+    // TODO: Write this method
+    // 1- Use the client get method to retrieve data, deserialized as a JourneysResponse
+    //    Tips: Look at the get method from FakeClient
+    // 2- Iterate over journeys and convert the JourneysResponse.journeys into a Vec<Journey>
+    // See docs
+    // https://docs.rs/jiff/latest/jiff/#create-a-zoned-datetime-from-civil-time
+    // https://docs.rs/jiff/latest/jiff/#find-the-duration-between-two-zoned-datetimes
+    //
+    // Tips: Look for function in the code that could return the correct type.
+    //
+    // Try to use functional style.
+    //
+    // If you are really stuck look at the solution
+    //
+    todo!()
 }
 
 fn build_journeys_url(from_id: &str, to_id: &str) -> String {
