@@ -47,24 +47,18 @@ impl HTTPClient for ReqwestClient {
         username: &str,
         password: Option<&str>,
     ) -> Result<T, SncfAPIError> {
-        let response = self
-            .0
-            .get(url)
-            .basic_auth(username, password)
-            .send()
-            .await?;
-
-        let status = response.status();
-        if !status.is_success() {
-            let body = response.text().await.unwrap_or_default();
-            return Err(SncfAPIError::ApiError {
-                status: status.as_u16(),
-                message: body,
-            });
-        }
-
-        let res = response.json::<T>().await?;
-        Ok(res)
+        // TODO: Write this method
+        // https://docs.rs/reqwest/latest/reqwest/index.html
+        //
+        // 1- Get the response from the Request http get to the url.
+        //    Warning: think about the auth
+        //
+        // 2- Check the status is_success() if not goes out with an error.
+        //
+        // 3- Deserialize the response using serde.
+        //    T is a generic type to use this method with several concrete type that can be deserialized.
+        //
+        todo!()
     }
 }
 
