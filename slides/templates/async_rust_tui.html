@@ -1011,6 +1011,67 @@
         </section>
 
         <section>
+          <h3>Part 3 — Data serialization with Serde</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                <strong>Serde</strong> is the standard framework in Rust for
+                <strong>serialization and deserialization</strong>.
+                <ul>
+                  <li>JSON, YAML, TOML, CSV, and more,</li>
+                  <li>fast, type-safe, and widely adopted.</li>
+                </ul>
+              </li>
+
+              <li>
+                Two common deserialization modes:
+                <ul>
+                  <li>
+                    <strong>Typed</strong>: deserialize into user-defined
+                    structs (<code>#[derive(Deserialize)]</code>)
+                  </li>
+                  <li>
+                    <strong>Free-form</strong>: deserialize into generic Serde
+                    types (e.g. <code>serde_json::Value</code>)
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>In this workshop</strong>:
+                <ul>
+                  <li>we mostly use the <strong>typed approach</strong>,</li>
+                  <li>
+                    to keep domain logic explicit, safe, and easy to test.
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 3 — Serde: small example</h3>
+          <div class="lots_of_items2">
+            <pre><code class="language-rust">
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct Place {
+    id: String,
+    name: String,
+}
+
+// Deserialize JSON into a Rust type
+let place: Place = serde_json::from_str(json_str)?;
+
+// Serialize a Rust type back to JSON
+let json = serde_json::to_string(&place)?;
+    </code></pre>
+          </div>
+        </section>
+
+        <section>
           <h3>Part 3 - Time handling with jiff</h3>
           <div class="lots_of_items2">
             <ul>
