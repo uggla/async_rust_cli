@@ -1573,6 +1573,242 @@ let json = serde_json::to_string(&place)?;
           </div>
         </section>
 
+        <!-- =========================== -->
+        <!-- BLOC 5 :  TUI and Dashboard
+        <!-- =========================== -->
+        <section>
+          <h3>Part 5 - TUI and Dashboard</h3>
+          <img src="images/part05.jpg" alt="TUI and Dashboard" width="40%" />
+        </section>
+
+        <section>
+          <h3>Part 5 — Goal</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                <strong>Goal</strong>: display a real-time dashboard of journeys
+                between the configured <strong>start</strong> and
+                <strong>destination</strong> stations.
+              </li>
+
+              <li>
+                The screen is split into two panels:
+                <ul>
+                  <li>
+                    <strong>Left panel</strong>: journeys list (table)
+                    <ul>
+                      <li>departure date/time,</li>
+                      <li>travel duration,</li>
+                      <li>number of transfers / changes.</li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <strong>Right panel</strong>: countdown timer
+                    <ul>
+                      <li>
+                        time remaining from <strong>now</strong> until the
+                        selected departure,
+                      </li>
+                      <li>big, readable <code>HH:MM:SS</code> display.</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <strong>Background refresh task</strong>:
+                <ul>
+                  <li>
+                    periodically fetches journeys from the SNCF API (<strong
+                      >every 30 seconds</strong
+                    >),
+                  </li>
+                  <li>sends updated data to the dashboard,</li>
+                  <li>
+                    the UI refreshes automatically based on received data.
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 5 — tui-big-text (large ASCII rendering)</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                <strong>tui-big-text</strong> is a small helper crate built on
+                top of <strong>Ratatui</strong>.
+              </li>
+
+              <li>
+                You can think of it as a <strong>plugin-like widget</strong>:
+                <ul>
+                  <li>it renders text using large ASCII-style characters,</li>
+                  <li>designed to be easily embedded in a Ratatui layout.</li>
+                </ul>
+              </li>
+
+              <li>
+                In our dashboard:
+                <ul>
+                  <li>used to display the countdown timer,</li>
+                  <li>
+                    large <code>HH:MM:SS</code> format, readable at a glance.
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 5 — Desktop notifications with notify-rust</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                <strong>notify-rust</strong> is a Rust crate to send
+                <strong>desktop notifications</strong>.
+              </li>
+
+              <li>
+                It integrates with the operating system’s notification system
+                (when supported).
+              </li>
+
+              <li>
+                In our dashboard:
+                <ul>
+                  <li>
+                    when the countdown timer reaches <strong>zero</strong>,
+                  </li>
+                  <li>a notification is sent to the OS,</li>
+                  <li>
+                    to alert the user that the departure time has arrived.
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                The notification is sent <strong>only once</strong>:
+                <ul>
+                  <li>tracked via internal timer state,</li>
+                  <li>to avoid spamming the user.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 5 — One of the challenges</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                One important challenge in this part is how to
+                <strong>manage the HTTP client</strong>.
+              </li>
+
+              <li>
+                In <strong>Timer mode</strong> (the dashboard):
+                <ul>
+                  <li>
+                    the HTTP client is currently used
+                    <strong>only by the background refresh task</strong>,
+                  </li>
+                  <li>
+                    the TUI loop only consumes the refreshed data (it does not
+                    call the API directly).
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                This makes one solution tempting:
+                <ul>
+                  <li>keep the HTTP client entirely inside the task.</li>
+                </ul>
+              </li>
+
+              <li>
+                But we want the design to stay flexible:
+                <ul>
+                  <li>
+                    future features may require HTTP calls from other places
+                    (TUI actions, details view, manual refresh, etc.),
+                  </li>
+                  <li>
+                    one possible direction is to make the HTTP client a
+                    <strong>property of the application state</strong>
+                    (<code>App</code>),
+                  </li>
+                  <li>so it can be shared when needed, without duplication.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Part 5 — What to do in this step</h3>
+          <div class="lots_of_items2">
+            <ul>
+              <li>
+                Run the tests with <code>cargo test</code> and fix failures.
+              </li>
+
+              <li>
+                This part introduces <strong>new behaviors and state</strong>:
+                <ul>
+                  <li>background data refresh,</li>
+                  <li>timer and countdown logic,</li>
+                  <li>UI updates driven by incoming data.</li>
+                </ul>
+              </li>
+
+              <li>
+                One part is intentionally a bit tricky:
+                <ul>
+                  <li>
+                    the HTTP client must be used across asynchronous boundaries,
+                  </li>
+                  <li>and the code needs to compile and remain correct.</li>
+                </ul>
+              </li>
+
+              <li>
+                A suggested approach:
+                <ul>
+                  <li>
+                    first, <strong>make the code compile</strong>, even if it
+                    means using multiple client instances,
+                  </li>
+                  <li>
+                    then, step back and think about
+                    <strong>a better way to share the client</strong>.
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                Please ask questions!
+                <ul>
+                  <li>
+                    this is a good opportunity to discuss ownership, sharing,
+                    and async design choices,
+                  </li>
+                  <li>
+                    the goal is to understand the trade-offs, not just the final
+                    solution.
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         <section>
           <h2>Thanks</h2>
           <div class="left_text_top_margin">
