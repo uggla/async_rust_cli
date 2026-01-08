@@ -1,6 +1,8 @@
 use anyhow::bail;
 use sncf::{Call, call_me, call_me_twice};
 
+pub const APPNAME: &str = env!("CARGO_PKG_NAME");
+
 pub fn run() -> anyhow::Result<()> {
     let arg1 = Call::Ok;
 
