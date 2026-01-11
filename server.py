@@ -15,13 +15,15 @@ import sys
 import argparse
 
 PORT = os.environ.get("PORT", "8000")
+HOST = os.environ.get("HOST", "localhost")
 SLIDES_DIR = "slides"
 Handler = http.server.SimpleHTTPRequestHandler
 
 
 def check_tools():
     try:
-        subprocess.check_output("which staticjinja >/dev/null 2>&1", shell=True)
+        subprocess.check_output(
+            "which staticjinja >/dev/null 2>&1", shell=True)
 
         if not os.path.exists("reveal.js/package.json"):
             raise FileNotFoundError
@@ -41,8 +43,8 @@ def check_tools():
 
 
 def serve_content():
-    with socketserver.TCPServer(("", int(PORT)), Handler) as httpd:
-        print("serving at http://localhost:{}".format(PORT))
+    with socketserver.TCPServer((HOST, int(PORT)), Handler) as httpd:
+        print("serving at http://{}:{}".format(HOST, PORT))
         httpd.serve_forever()
 
 
@@ -56,7 +58,8 @@ def build_presentations():
 def watch():
     print("\033[32mStaticjinja watch for {}\033[0m".format(SLIDES_DIR))
     os.chdir(SLIDES_DIR)
-    command = ["staticjinja", "watch"]  # Replace with your shell command and arguments
+    # Replace with your shell command and arguments
+    command = ["staticjinja", "watch"]
 
     # Run the command in the background
     process = subprocess.Popen(

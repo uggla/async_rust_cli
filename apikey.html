@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Config</title>
+</head>
+<body>
+    <pre id="env-content"></pre>
+    <!-- Affiche la configuration pour aider les participants à configurer leur environnement -->
+    <script>
+        fetch('.env')
+            .then(response => response.text())
+            .then(text => {
+                document.getElementById('env-content').textContent = text;
+            })
+            .catch(() => {
+                document.getElementById('env-content').textContent = 'Impossible de charger le fichier .env';
+            });
+    </script>
+</body>
+</html>

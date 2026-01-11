@@ -18,6 +18,7 @@
 	"portsAttributes": {
 		"\\./server.py": {
 			"label": "Slides Server",
+			"protocol": "http",
 			"onAutoForward": "openPreview"
 		}
 	},
@@ -28,7 +29,6 @@
 		"reveal.js": "git submodule init && git submodule update"
 	},
 	"postAttachCommand": {
-		"slides-server": ".devcontainer/slides-server.sh",
 		"gitconfig": ".devcontainer/gitconfig.sh postAttach"
 	},
 	"customizations": {
