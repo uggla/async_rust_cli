@@ -24,7 +24,6 @@ async fn main() -> anyhow::Result<()> {
 
     let _ = dotenvy::dotenv();
     let api_key = env::var("SNCF_API_KEY")?;
-    api_check(api_key.clone())?;
     run(api_key).await?;
 
     tracing::info!("Application ending");
