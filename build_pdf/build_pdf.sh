@@ -21,7 +21,7 @@ current_dir=$(pwd)
 cd "$(dirname "$0")"
 cd ../slides
 
-podman run -ti --network host --userns=keep-id --rm -v "$PWD":/data:Z -e "HOSTNAME=$HOSTNAME" -e "OUTPUT=async_rust_tui" localhost/build_pdf:latest
+podman run -ti --network host --userns=keep-id --rm -v "$PWD":/data:Z -e "HOSTNAME=$HOSTNAME" -e "OUTPUT=async_rust_cli" localhost/build_pdf:latest
 
 cd "$current_dir"
 exit 0

@@ -2,5 +2,6 @@
 .venv/
 .env
 target
-/slides/async_rust_tui.html
+/slides/async_rust_cli.html
+/slides/async_rust_cli.png
 nohup.out
