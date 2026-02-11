@@ -164,9 +164,7 @@ mod tests {
         let journeys_help = String::from_utf8(journeys_buf).unwrap();
 
         assert!(journeys_help.contains("Start id of the Journeys (stop_area:SNCF:87686006)"));
-        assert!(journeys_help.contains(
-            "Destination id of the Journeys (stop_area:SNCF:87747006)"
-        ));
+        assert!(journeys_help.contains("Destination id of the Journeys (stop_area:SNCF:87747006)"));
     }
 
     #[test]
@@ -204,9 +202,12 @@ mod tests {
 
     #[test]
     fn cli_parse_missing_subcommand_fails() {
-        let err = Cli::try_parse_from(["async_rust_cli"])
-            .expect_err("missing subcommand should fail");
-        assert_eq!(err.kind(), clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand);
+        let err =
+            Cli::try_parse_from(["async_rust_cli"]).expect_err("missing subcommand should fail");
+        assert_eq!(
+            err.kind(),
+            clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand
+        );
     }
 
     #[tokio::test]
