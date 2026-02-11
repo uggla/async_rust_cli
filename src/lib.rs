@@ -1,40 +1,59 @@
 use std::time::Duration;
 
-use anyhow::bail;
-// use sncf::{Call, call_me, call_me_twice};
+use std::env;
+
+use clap::{Parser, Subcommand};
+use sncf::{client::ReqwestClient, fetch_places};
 use tokio::sync::mpsc::{self, error};
+use tokio::task::JoinHandle;
 
 pub const APPNAME: &str = env!("CARGO_PKG_NAME");
 
+#[derive(Parser, Debug)]
+#[command(name = APPNAME, version, about)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Places {
+        /// Search query. Use quotes for spaces, e.g. "Saint Michel"
+        query: String,
+    },
+    Journeys {
+        /// Start id of the Journeys (stop_area:SNCF:87686006)
+        start: String,
+        /// Destination id of the Journeys (stop_area:SNCF:87747006)
+        destination: String,
+    },
+}
+
 #[allow(unused)]
 pub async fn run(_api_key: String) -> anyhow::Result<()> {
-    let mut count = 0;
-    let mut msg = String::new();
+    let cli = Cli::parse();
+    match cli.command {
+        Commands::Places { query } => {
+            let client = ReqwestClient::new();
+            let places = fetch_places(&client, &_api_key, &query).await?;
+
+            println!("Places for {query}:");
+            for place in places {
+                println!("{}\t{}", place.id, place.name);
+            }
+            return Ok(());
+        }
+
+        Commands::Journeys { start, destination } => {}
+    }
+
     let (data_sender, mut data_receiver) = mpsc::channel::<String>(5);
 
     // Spawn a task here that will send data from the API.
-    let refresh_task = tokio::spawn(async move {
-        tracing::info!("refresh task started");
+    let refresh_task = spawn_refresh_task(data_sender);
 
-        loop {
-            tracing::info!("sending data");
-            if count == 5 {
-                msg = "stop".to_string()
-            } else {
-                msg = format!("Hello {count}");
-            }
-            if let Err(e) = data_sender.send(msg).await {
-                tracing::error!("Error sending message: {e}");
-                break;
-            }
-            tokio::time::sleep(tokio::time::Duration::from_millis(2000)).await;
-            count += 1;
-        }
-
-        tracing::error!("refresh task terminated");
-    });
-
-    // Following loop simulate the TUI main loop.
+    // Following loop simulate the main loop.
     loop {
         // Check that the external task is running, if not return an error.
         if refresh_task.is_finished() {
@@ -60,13 +79,6 @@ pub async fn run(_api_key: String) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn api_check(api: String) -> anyhow::Result<()> {
-    match api.as_str() {
-        "change_me" => Ok(()),
-        _ => bail!("Wrong api key"),
-    }
-}
-
 fn refresh_task_result_to_err(res: Result<(), tokio::task::JoinError>) -> anyhow::Result<()> {
     match res {
         Ok(_) => {
@@ -82,6 +94,30 @@ fn refresh_task_result_to_err(res: Result<(), tokio::task::JoinError>) -> anyhow
             ))
         }
     }
+}
+
+fn spawn_refresh_task(data_sender: mpsc::Sender<String>) -> JoinHandle<()> {
+    let mut count = 0;
+    tokio::spawn(async move {
+        tracing::info!("refresh task started");
+
+        loop {
+            tracing::info!("sending data");
+            let msg = if count == 5 {
+                "stop".to_string()
+            } else {
+                format!("Hello {count}")
+            };
+            if let Err(e) = data_sender.send(msg).await {
+                tracing::error!("Error sending message: {e}");
+                break;
+            }
+            tokio::time::sleep(tokio::time::Duration::from_millis(2000)).await;
+            count += 1;
+        }
+
+        tracing::error!("refresh task terminated");
+    })
 }
 
 #[cfg(test)]
@@ -100,21 +136,6 @@ mod tests {
     #[should_panic(expected = "Houston, we have a problem !")]
     fn fake_panic() {
         panic!("Houston, we have a problem !");
-    }
-
-    #[test]
-    fn api_check_accepts_expected_key() {
-        let result = api_check("change_me".to_string());
-
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn api_check_rejects_other_keys() {
-        let result = api_check("nope".to_string());
-
-        let err = result.expect_err("expected api_check to fail for invalid key");
-        assert_eq!(err.to_string(), "Wrong api key");
     }
 
     #[tokio::test]
@@ -136,12 +157,6 @@ mod tests {
             err.to_string().contains("💥 refresh task panicked:"),
             "unexpected error: {err}"
         );
-    }
-
-    #[tokio::test]
-    async fn run_returns_ok_after_stop_message() {
-        let result = run("change_me".to_string()).await;
-        assert!(result.is_ok());
     }
 
     #[tokio::test]
