@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8" />
 
-    <title>Async Rust and TUI</title>
+    <title>Async Rust and CLI</title>
 
-    <meta name="description" content="Async Rust and TUI" />
+    <meta name="description" content="Async Rust and CLI" />
     <meta name="author" content="Cyril Marin, René Ribaud" />
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -197,19 +197,22 @@
       <div class="slides">
         <!-- <section data-background="images/background.svg" data-background-size="cover"> -->
         <section>
-          <h1>Async Rust and TUI</h1>
-          <img src="images/snowcamp_logo.png" alt="snowcamp_logo" width="25%" />
-
-          <h2>Snowcamp 2026</h2>
+          <h1>Async Rust and CLI</h1>
+          <img
+            src="images/AlpOSS_tagline_colored_margin.png"
+            alt="AlpOSS_logo"
+            width="70%"
+          />
+          <h4>AlpOSS 2026</h4>
         </section>
 
         <section
-          data-background="images/snowcamp_sponsors.png"
+          data-background="images/alposs_sponsors.png"
           data-background-size="cover"
         ></section>
 
         <section>
-          <h3>Async Rust and TUI</h3>
+          <h3>Async Rust and CLI</h3>
           <h4>Welcome and Development Environment Setup</h4>
           <div class="lots_of_items4">
             <ul>
@@ -232,8 +235,8 @@
                 <li>
                   <strong>Clone the workshop repository</strong>
                   from GitHub.<br />
-                  <a href="https://github.com/uggla/async_rust_tui"
-                    >https://github.com/uggla/async_rust_tui</a
+                  <a href="https://github.com/uggla/async_rust_cli"
+                    >https://github.com/uggla/async_rust_cli</a
                   >
                 </li>
                 <li>
@@ -530,7 +533,7 @@
                   <li>
                     Use key crates from the ecosystem:
                     <strong>Tokio</strong>, <strong>Reqwest</strong>,
-                    <strong>Serde</strong>, <strong>Ratatui</strong>,
+                    <strong>Serde</strong>, <strong>Clap</strong>,
                     <strong>Anyhow</strong>, etc.
                   </li>
                   <li>Consume a real-time API (e.g. SNCF data)</li>
@@ -550,7 +553,7 @@
                 What we will build together:
                 <ul>
                   <li>
-                    A TUI dashboard for train departures between two stations
+                    A CLI dashboard for train departures between two stations
                   </li>
                 </ul>
               </li>
@@ -559,7 +562,7 @@
 
           <div class="pic lots_of_items">
             <video width="100%" autoplay loop muted>
-              <source src="images/async_rust_tui.mp4" type="video/mp4" />
+              <source src="images/async_rust_cli.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
@@ -777,7 +780,7 @@
                     <li>
                       which is essential for debugging because
                       <strong
-                        >stdout / stderr are not available in TUI mode</strong
+                        >stdout / stderr are not available in CLI mode</strong
                       >.
                     </li>
                   </ul>
@@ -811,7 +814,7 @@
                 </ul>
               </li>
               <li>
-                For now, the <strong>TUI loop is simulated</strong> inside the
+                For now, the <strong>CLI loop is simulated</strong> inside the
                 <code>run()</code> function.
                 <ul>
                   <li>
@@ -827,7 +830,7 @@
                 <ul>
                   <li>it acts like the SNCF API refresh,</li>
                   <li>sends new data at regular intervals,</li>
-                  <li>communicates with the TUI loop via a channel.</li>
+                  <li>communicates with the CLI loop via a channel.</li>
                 </ul>
               </li>
             </ul>
@@ -947,7 +950,7 @@
                 <ul>
                   <li>
                     blocking a task can freeze <strong>all</strong> tasks on
-                    that worker thread (including the TUI loop!)
+                    that worker thread (including the CLI loop!)
                   </li>
                   <li>
                     avoid blocking calls inside async code:
@@ -991,7 +994,7 @@
                 <ul>
                   <li>the <strong>refresh task</strong> sends updates,</li>
                   <li>
-                    the <strong>TUI loop</strong> receives and processes them.
+                    the <strong>CLI loop</strong> receives and processes them.
                   </li>
                 </ul>
               </li>
@@ -1016,7 +1019,7 @@
                 <ul>
                   <li>simpler mental model,</li>
                   <li>explicit data flow,</li>
-                  <li>well-suited for a TUI event loop.</li>
+                  <li>well-suited for a CLI event loop.</li>
                 </ul>
               </li>
             </ul>
@@ -1364,15 +1367,15 @@ let json = serde_json::to_string(&place)?;
         </section>
 
         <!-- ======================== -->
-        <!-- BLOC 4 :  Config and TUI
+        <!-- BLOC 4 :  Config and CLI
         <!-- ======================== -->
         <section>
-          <h3>Part 4 - Config and TUI</h3>
-          <img src="images/part04.jpg" alt="Config and TUI" width="77%" />
+          <h3>Part 4 - Config and CLI</h3>
+          <img src="images/part04.jpg" alt="Config and CLI" width="77%" />
         </section>
 
         <section>
-          <h3>Part 4 — Config and TUI</h3>
+          <h3>Part 4 — Config and CLI</h3>
           <div class="lots_of_items2">
             <ul>
               <li>
@@ -1393,7 +1396,7 @@ let json = serde_json::to_string(&place)?;
                   <li>
                     <strong>No config file</strong>:
                     <ul>
-                      <li>launch the TUI station picker,</li>
+                      <li>launch the CLI station picker,</li>
                       <li>
                         we cannot start the refresh task yet (stations are
                         unknown),
@@ -1421,7 +1424,7 @@ let json = serde_json::to_string(&place)?;
               </li>
 
               <li>
-                This is the first step toward a full TUI dashboard:
+                This is the first step toward a full CLI dashboard:
                 <ul>
                   <li>configuration screen → then live data screen.</li>
                 </ul>
@@ -1431,15 +1434,15 @@ let json = serde_json::to_string(&place)?;
         </section>
 
         <section>
-          <h3>Part 4 — Crates: Ratatui & Crossterm</h3>
+          <h3>Part 4 — Crates: RataCLI & Crossterm</h3>
           <div class="lots_of_items2">
             <ul>
               <li>
-                <strong>Ratatui</strong>
+                <strong>RataCLI</strong>
                 <ul>
                   <li>
                     a Rust library to build rich
-                    <strong>terminal user interfaces</strong> (TUIs)
+                    <strong>terminal user interfaces</strong> (CLIs)
                   </li>
                   <li>
                     widgets: <code>Block</code>, <code>Paragraph</code>,
@@ -1463,7 +1466,7 @@ let json = serde_json::to_string(&place)?;
                     keyboard events, mouse events (optional), terminal resize
                   </li>
                   <li>
-                    enables TUI mode:
+                    enables CLI mode:
                     <ul>
                       <li><strong>raw mode</strong> (no line buffering)</li>
                       <li>
@@ -1478,7 +1481,7 @@ let json = serde_json::to_string(&place)?;
                 How they work together:
                 <ul>
                   <li>Crossterm handles terminal + events</li>
-                  <li>Ratatui renders widgets into a terminal backend</li>
+                  <li>RataCLI renders widgets into a terminal backend</li>
                   <li>
                     we must always <strong>restore</strong> the terminal on exit
                     (even on panic)
@@ -1531,7 +1534,7 @@ let json = serde_json::to_string(&place)?;
               </li>
 
               <li>
-                Why both are important for TUIs:
+                Why both are important for CLIs:
                 <ul>
                   <li>raw mode enables responsive, interactive input</li>
                   <li>alternate screen provides a clean full-screen UI</li>
@@ -1559,11 +1562,11 @@ let json = serde_json::to_string(&place)?;
         </section>
 
         <section>
-          <h3>Part 4 — Modular TUI structure (MVP)</h3>
+          <h3>Part 4 — Modular CLI structure (MVP)</h3>
           <div class="lots_of_items2">
             <ul>
               <li>
-                The TUI code is split into small modules to stay maintainable:
+                The CLI code is split into small modules to stay maintainable:
                 <ul>
                   <li>
                     <code>app.rs</code> — application state and update logic
@@ -1614,9 +1617,9 @@ let json = serde_json::to_string(&place)?;
               </li>
 
               <li>
-                Why snapshot testing fits TUIs well:
+                Why snapshot testing fits CLIs well:
                 <ul>
-                  <li>TUIs are hard to test with traditional assertions,</li>
+                  <li>CLIs are hard to test with traditional assertions,</li>
                   <li>the rendered output is mostly text-based,</li>
                   <li>snapshots make visual regressions easy to spot.</li>
                 </ul>
@@ -1686,11 +1689,11 @@ let json = serde_json::to_string(&place)?;
         </section>
 
         <!-- =========================== -->
-        <!-- BLOC 5 :  TUI and Dashboard
+        <!-- BLOC 5 :  CLI and Dashboard
         <!-- =========================== -->
         <section>
-          <h3>Part 5 - TUI and Dashboard</h3>
-          <img src="images/part05.jpg" alt="TUI and Dashboard" width="37%" />
+          <h3>Part 5 - CLI and Dashboard</h3>
+          <img src="images/part05.jpg" alt="CLI and Dashboard" width="37%" />
         </section>
 
         <section>
@@ -1747,19 +1750,19 @@ let json = serde_json::to_string(&place)?;
         </section>
 
         <section>
-          <h3>Part 5 — tui-big-text (large ASCII rendering)</h3>
+          <h3>Part 5 — CLI-big-text (large ASCII rendering)</h3>
           <div class="lots_of_items2">
             <ul>
               <li>
-                <strong>tui-big-text</strong> is a small helper crate built on
-                top of <strong>Ratatui</strong>.
+                <strong>CLI-big-text</strong> is a small helper crate built on
+                top of <strong>RataCLI</strong>.
               </li>
 
               <li>
                 You can think of it as a <strong>plugin-like widget</strong>:
                 <ul>
                   <li>it renders text using large ASCII-style characters,</li>
-                  <li>designed to be easily embedded in a Ratatui layout.</li>
+                  <li>designed to be easily embedded in a RataCLI layout.</li>
                 </ul>
               </li>
 
@@ -1831,7 +1834,7 @@ let json = serde_json::to_string(&place)?;
                     <strong>only by the background refresh task</strong>,
                   </li>
                   <li>
-                    the TUI loop only consumes the refreshed data (it does not
+                    the CLI loop only consumes the refreshed data (it does not
                     call the API directly).
                   </li>
                 </ul>
@@ -1849,7 +1852,7 @@ let json = serde_json::to_string(&place)?;
                 <ul>
                   <li>
                     future features may require HTTP calls from other places
-                    (TUI actions, details view, manual refresh, etc.),
+                    (CLI actions, details view, manual refresh, etc.),
                   </li>
                   <li>
                     one possible direction is to make the HTTP client a
