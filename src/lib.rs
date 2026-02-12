@@ -2,7 +2,10 @@ use std::time::Duration;
 
 use std::env;
 
+use anyhow::Context;
 use clap::{Parser, Subcommand};
+use jiff::{Unit, Zoned};
+use sncf::{Journey, SncfAPIError, fetch_journeys};
 use sncf::{client::ReqwestClient, fetch_places};
 use tokio::sync::mpsc::{self, error};
 use tokio::task::JoinHandle;
@@ -32,15 +35,7 @@ enum Commands {
 
 pub async fn run(api_key: String) -> anyhow::Result<()> {
     let cli = Cli::parse();
-    run_with_cli_and_limit(api_key, cli, None).await
-}
-
-async fn run_with_cli_and_limit(
-    api_key: String,
-    cli: Cli,
-    max_updates: Option<usize>,
-) -> anyhow::Result<()> {
-    match cli.command {
+    let (start, destination) = match cli.command {
         Commands::Places { query } => {
             let client = ReqwestClient::new();
             let places = fetch_places(&client, &api_key, &query).await?;
@@ -52,14 +47,15 @@ async fn run_with_cli_and_limit(
             return Ok(());
         }
 
-        #[allow(unused_variables)]
-        Commands::Journeys { start, destination } => {}
-    }
+        Commands::Journeys { start, destination } => (start, destination),
+    };
 
-    let (data_sender, mut data_receiver) = mpsc::channel::<String>(5);
+    let (data_sender, mut data_receiver) = mpsc::channel::<Result<Vec<Journey>, SncfAPIError>>(5);
 
     // Spawn a task here that will send data from the API.
-    let refresh_task = spawn_refresh_task(data_sender);
+    let start_label = start.clone();
+    let destination_label = destination.clone();
+    let refresh_task = spawn_refresh_task(data_sender, _api_key, start, destination);
 
     let mut updates = 0usize;
     loop {
@@ -74,15 +70,47 @@ async fn run_with_cli_and_limit(
             Err(error::TryRecvError::Disconnected) => {}
             Ok(data) => {
                 tracing::info!("data received");
-                tracing::debug!("Data: {data}");
-                // For testing purpose, we send a stop message after 5 iterations to go out of the
-                // loop.
-                updates += 1;
-                if let Some(limit) = max_updates
-                    && updates >= limit
-                {
-                    break;
+                tracing::debug!("Data: {data:?}");
+                let update_time = format_update_time();
+                println!(
+                    "===================================================================================================================================="
+                );
+                println!(
+                    "{}  -> {}             Update time:{}",
+                    start_label, destination_label, update_time
+                );
+                println!(
+                    "------------------------------------------------------------------------------------------------------------------------------------"
+                );
+                let mut journeys = data.context("Fail to retrieve journeys")?;
+                if journeys.is_empty() {
+                    println!("No journeys");
+                } else {
+                    journeys.sort_by_key(|j| j.dep.clone());
+                    let now = Zoned::now().round(Unit::Second);
+                    for journey in &journeys {
+                        let dur_min = journey.duration_secs / 60;
+                        let remaining_min = match &now {
+                            Ok(now) => {
+                                let diff = &journey.dep - now;
+                                diff.total(Unit::Minute).unwrap_or(0.0) as i64
+                            }
+                            Err(_) => 0,
+                        };
+                        let dep_str = sncf::format_hm(&journey.dep);
+                        println!(
+                            "Date: {:<10}  Dur: {:<3}  Changes: {:<2}  Dep at: {:<5}  In: {}m",
+                            journey.date_str,
+                            format!("{dur_min}m"),
+                            journey.nb_transfers,
+                            dep_str,
+                            remaining_min,
+                        );
+                    }
                 }
+                println!(
+                    "====================================================================================================================================\n"
+                );
             }
         };
         tokio::time::sleep(Duration::from_millis(100)).await
@@ -107,17 +135,36 @@ fn refresh_task_result_to_err(res: Result<(), tokio::task::JoinError>) -> anyhow
     }
 }
 
-fn spawn_refresh_task(data_sender: mpsc::Sender<String>) -> JoinHandle<()> {
+fn format_update_time() -> String {
+    let now = Zoned::now()
+        .round(Unit::Second)
+        .map(|z| z.to_string())
+        .unwrap_or_else(|_| "unknown".to_string());
+    if now.len() >= 19 {
+        now[11..19].to_string()
+    } else {
+        now
+    }
+}
+
+fn spawn_refresh_task(
+    data_sender: mpsc::Sender<Result<Vec<Journey>, SncfAPIError>>,
+    api_key: String,
+    start_id: String,
+    destination_id: String,
+) -> JoinHandle<()> {
+    let client = ReqwestClient::new();
     tokio::spawn(async move {
         tracing::info!("refresh task started");
 
         loop {
             tracing::info!("sending data");
-            if let Err(e) = data_sender.send("Hello".to_string()).await {
+            let msg = fetch_journeys(&client, &api_key, &start_id, &destination_id).await;
+            if let Err(e) = data_sender.send(msg).await {
                 tracing::error!("Error sending message: {e}");
                 break;
             }
-            tokio::time::sleep(tokio::time::Duration::from_millis(2000)).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
         }
 
         tracing::error!("refresh task terminated");
