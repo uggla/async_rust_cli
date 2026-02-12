@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use anyhow::bail;
 // use sncf::{Call, call_me, call_me_twice};
 use tokio::sync::mpsc::{self, error};
@@ -53,6 +55,7 @@ pub async fn run(_api_key: String) -> anyhow::Result<()> {
                 }
             }
         };
+        tokio::time::sleep(Duration::from_millis(100)).await
     }
     Ok(())
 }
@@ -132,7 +135,7 @@ mod tests {
         );
     }
 
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    #[tokio::test]
     async fn run_returns_ok_after_stop_message() {
         let result = run("change_me".to_string()).await;
         assert!(result.is_ok());
