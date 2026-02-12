@@ -1,6 +1,5 @@
-use std::time::Duration;
-
 use std::env;
+use std::time::Duration;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
@@ -33,8 +32,17 @@ enum Commands {
     },
 }
 
+#[allow(unused)]
 pub async fn run(api_key: String) -> anyhow::Result<()> {
     let cli = Cli::parse();
+    run_with_cli_and_limit(api_key, cli, None).await
+}
+
+async fn run_with_cli_and_limit(
+    api_key: String,
+    cli: Cli,
+    max_updates: Option<usize>,
+) -> anyhow::Result<()> {
     let (start, destination) = match cli.command {
         Commands::Places { query } => {
             let client = ReqwestClient::new();
@@ -55,8 +63,9 @@ pub async fn run(api_key: String) -> anyhow::Result<()> {
     // Spawn a task here that will send data from the API.
     let start_label = start.clone();
     let destination_label = destination.clone();
-    let refresh_task = spawn_refresh_task(data_sender, _api_key, start, destination);
+    let refresh_task = spawn_refresh_task(data_sender, api_key, start, destination);
 
+    // Following loop simulate the main loop.
     let mut updates = 0usize;
     loop {
         // Check that the external task is running, if not return an error.
@@ -111,6 +120,12 @@ pub async fn run(api_key: String) -> anyhow::Result<()> {
                 println!(
                     "====================================================================================================================================\n"
                 );
+                updates += 1;
+                if let Some(limit) = max_updates
+                    && updates >= limit
+                {
+                    break;
+                }
             }
         };
         tokio::time::sleep(Duration::from_millis(100)).await
@@ -176,7 +191,6 @@ mod tests {
     use clap::CommandFactory;
     use sncf::client::ReqwestClient;
     use sncf::{SncfAPIError, fetch_journeys, fetch_places};
-    use tokio::time::timeout;
 
     use super::*;
 
@@ -279,25 +293,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn run_with_cli_and_limit_journeys_exits_on_limit() {
-        let cli = Cli {
-            command: Commands::Journeys {
-                start: "stop_area:SNCF:87747006".to_string(),
-                destination: "stop_area:SNCF:87747337".to_string(),
-            },
-        };
-
-        let res = timeout(
-            Duration::from_secs(3),
-            run_with_cli_and_limit("unused_api_key".to_string(), cli, Some(1)),
-        )
-        .await
-        .expect("run_with_cli_and_limit should complete before timeout");
-
-        assert!(res.is_ok(), "expected Ok(()), got: {res:?}");
-    }
-
-    #[tokio::test]
     #[ignore = "hits live SNCF API"]
     // Take care you need to export the SNCF_API_KEY
     async fn test_fetch_places_live_api() {
@@ -384,17 +379,45 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn run_with_cli_and_limit_places_grenoble_live_api() {
+    async fn run_with_args_ok_ids_returns_ok() {
         let api_key =
             std::env::var("SNCF_API_KEY").expect("set SNCF_API_KEY to run the live API test");
-        let cli = Cli {
-            command: Commands::Places {
-                query: "Grenoble".to_string(),
-            },
-        };
 
-        run_with_cli_and_limit(api_key, cli, None)
-            .await
-            .expect("expected places command to succeed for Grenoble");
+        let cli = Cli::try_parse_from([
+            "async_rust_cli",
+            "journeys",
+            "stop_area:SNCF:87747006",
+            "stop_area:SNCF:87747337",
+        ])
+        .expect("valid CLI args");
+
+        let res = run_with_cli_and_limit(api_key, cli, Some(1)).await;
+        assert!(res.is_ok(), "expected Ok, got: {res:?}");
+    }
+
+    #[tokio::test]
+    async fn run_with_args_bad_ids_returns_err() {
+        let api_key =
+            std::env::var("SNCF_API_KEY").expect("set SNCF_API_KEY to run the live API test");
+
+        let cli = Cli::try_parse_from([
+            "async_rust_cli",
+            "journeys",
+            "stop_area:SNCF:00000000",
+            "stop_area:SNCF:00000001",
+        ])
+        .expect("valid CLI args");
+
+        let res = run_with_cli_and_limit(api_key, cli, Some(1)).await;
+        let err = res.expect_err("expected Err for bad ids");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Fail to retrieve journeys"),
+            "expected Fail to retrieve journeys error, got: {msg}"
+        );
+        assert!(
+            !msg.contains("panicked"),
+            "expected no panic-based error, got: {msg}"
+        );
     }
 }
