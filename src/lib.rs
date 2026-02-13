@@ -17,15 +17,17 @@ struct Cli {
 }
 
 #[derive(Subcommand, Debug)]
+// TODO: Fix the command below
 enum Commands {
     Places {
         /// Search query. Use quotes for spaces, e.g. "Saint Michel"
         query: String,
     },
-    Journeys {
+    Zourneys {
         /// Start id of the Journeys (stop_area:SNCF:87686006)
         start: String,
-        /// Destination id of the Journeys (stop_area:SNCF:87747006)
+        // TODO: run test and fix the help message
+        /// Destination of the Journeys (stop_area:SNCF:87747006)
         destination: String,
     },
 }
@@ -43,7 +45,8 @@ async fn run_with_cli_and_limit(
     match cli.command {
         Commands::Places { query } => {
             let client = ReqwestClient::new();
-            let places = fetch_places(&client, &api_key, &query).await?;
+            // TODO: Fix the function calling error
+            let places = fetch_places(client, api_key, query).await?;
 
             println!("Places for {query}:");
             for place in places {
@@ -164,9 +167,7 @@ mod tests {
         let journeys_help = String::from_utf8(journeys_buf).unwrap();
 
         assert!(journeys_help.contains("Start id of the Journeys (stop_area:SNCF:87686006)"));
-        assert!(journeys_help.contains(
-            "Destination id of the Journeys (stop_area:SNCF:87747006)"
-        ));
+        assert!(journeys_help.contains("Destination id of the Journeys (stop_area:SNCF:87747006)"));
     }
 
     #[test]
@@ -204,9 +205,12 @@ mod tests {
 
     #[test]
     fn cli_parse_missing_subcommand_fails() {
-        let err = Cli::try_parse_from(["async_rust_cli"])
-            .expect_err("missing subcommand should fail");
-        assert_eq!(err.kind(), clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand);
+        let err =
+            Cli::try_parse_from(["async_rust_cli"]).expect_err("missing subcommand should fail");
+        assert_eq!(
+            err.kind(),
+            clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand
+        );
     }
 
     #[tokio::test]
