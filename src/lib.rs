@@ -1,10 +1,9 @@
 use std::env;
 use std::time::Duration;
 
-use anyhow::Context;
 use clap::{Parser, Subcommand};
 use jiff::{Unit, Zoned};
-use sncf::{Journey, SncfAPIError, fetch_journeys};
+use sncf::{Journey, fetch_journeys};
 use sncf::{client::ReqwestClient, fetch_places};
 use tokio::sync::mpsc::{self, error};
 use tokio::task::JoinHandle;
@@ -58,10 +57,10 @@ async fn run_with_cli_and_limit(
         Commands::Journeys { start, destination } => (start, destination),
     };
 
-    let (data_sender, mut data_receiver) = mpsc::channel::<Result<Vec<Journey>, SncfAPIError>>(5);
+    let (data_sender, mut data_receiver) = mpsc::channel::<Vec<Journey>>(5);
 
     // Spawn a task here that will send data from the API.
-    let start_label = start.clone();
+    let start_label = start;
     let destination_label = destination.clone();
     let refresh_task = spawn_refresh_task(data_sender, api_key, start, destination);
 
@@ -91,7 +90,8 @@ async fn run_with_cli_and_limit(
                 println!(
                     "------------------------------------------------------------------------------------------------------------------------------------"
                 );
-                let mut journeys = data.context("Fail to retrieve journeys")?;
+                // TODO: At some point you might need to add anyhow context
+                let mut journeys = data;
                 if journeys.is_empty() {
                     println!("No journeys");
                 } else {
@@ -163,7 +163,7 @@ fn format_update_time() -> String {
 }
 
 fn spawn_refresh_task(
-    data_sender: mpsc::Sender<Result<Vec<Journey>, SncfAPIError>>,
+    data_sender: mpsc::Sender<Vec<Journey>>,
     api_key: String,
     start_id: String,
     destination_id: String,
@@ -174,7 +174,11 @@ fn spawn_refresh_task(
 
         loop {
             tracing::info!("sending data");
-            let msg = fetch_journeys(&client, &api_key, &start_id, &destination_id).await;
+            let msg = fetch_journeys(&client, &api_key, &start_id, &destination_id)
+                .await
+                // TODO: You shall not panic !!!!
+                // Tips: Look at what the function returns. Maybe you can pass it as a message...
+                .expect("You shall not panic !!!");
             if let Err(e) = data_sender.send(msg).await {
                 tracing::error!("Error sending message: {e}");
                 break;
