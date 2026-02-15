@@ -3,14 +3,13 @@
 {
 	"name": "Rust",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/rust:2-1-trixie",
+	"image": "mcr.microsoft.com/devcontainers/rust",
 	"hostRequirements": {
 		"cpus": 4,
 		"gpu": false
 	},
 	"features": {
 		"ghcr.io/devcontainers/features/python": {
-			"version": "3.14",
 			"installTools": true,
 			"toolsToInstall": "uv"
 		}
@@ -35,13 +34,13 @@
 		"vscode": {
 			"extensions": [
 				"rust-lang.rust-analyzer",
-				// "Gruntfuggly.todo-tree",
+				"Gruntfuggly.todo-tree",
 				"maattdd.gitless"
 			],
 			"settings": {
-				// "todo-tree.general.tags": ["Fix", "***DO***"],
-				// "todo-tree.general.automaticGitRefreshInterval": 0,
-				// "todo-tree.filtering.ignoreGitSubmodules": true
+				"todo-tree.general.tags": ["TODO","Fix","Fixme","FIXME","***DO***"],
+				"todo-tree.general.automaticGitRefreshInterval": 0,
+				"todo-tree.filtering.ignoreGitSubmodules": true
 			}
 		}
 	},
